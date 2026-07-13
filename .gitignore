@@ -1,0 +1,11 @@
+.venv/
+ignore/
+__pycache__/
+ffmpeg-2025-05-26-git-43a69886b2-full_build/
+soniox_examples/
+WhisperLive
+.env
+cuBLAS.and.cuDNN_CUDA12_win_v2.7z
+ffmpeg-2025-05-26-git-43a69886b2-full_build.7z
+vosk-model-en-us-0.22.zip
+vosk-model-en-us-0.22/

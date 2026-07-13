@@ -1,0 +1,143 @@
+# train_tripletnet.py
+
+import os
+import random
+import torch
+import torchaudio
+from torch.nn import TripletMarginLoss
+from torch.optim import Adam
+from TripleNet import TripletNet  # Your custom model
+from pyannote.audio import Inference
+
+# --- Config ---
+BASE = "D:/SPECIAL/Jarvis/voice_data"
+ANCHOR_DIR = os.path.join(BASE, "anchor")
+POS_DIR = os.path.join(BASE, "positive")
+NEG_DIR = os.path.join(BASE, "negative")
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+EPOCHS = 40
+TRIPLETS_PER_EPOCH = 75
+EMBEDDING_DIM = 512  # pyannote ECAPA embedding size
+
+# --- Model Setup ---
+spkrec = Inference("pyannote/embedding", window="whole").to(device)  # frozen ECAPA model
+triplet_model = TripletNet(input_dim=EMBEDDING_DIM).to(device)
+optimizer = Adam(triplet_model.parameters(), lr=3e-6)
+loss_fn = TripletMarginLoss(margin=0.6)
+
+# --- Utility: Load and preprocess audio ---
+
+def normalize_loudness(waveform):
+    rms = waveform.pow(2).mean().sqrt()
+    target_rms = 0.1  # Empirical; tune as needed
+    if rms > 0:
+        waveform = waveform * (target_rms / rms)
+    return waveform
+
+def list_wavs(folder):
+    return [os.path.join(folder, f) for f in os.listdir(folder) if f.endswith('.wav')]
+
+def augment(signal, sr):
+    aug_type = random.choice(['pitch', 'gain', 'none'])
+    if aug_type == 'pitch':
+        shift = random.uniform(-1.5, 1.5)
+        return torchaudio.functional.pitch_shift(signal, sr, shift)
+    elif aug_type == 'gain':
+        db = random.uniform(-5, 5)
+        return signal * (10 ** (db / 20))
+    return signal
+
+import random
+import torch
+
+def preprocess_audio(signal, sr, min_length_sec=2.0, max_length_sec=5.0):
+    # Randomly select target duration between 2 and 5 seconds
+    target_length_sec = random.uniform(min_length_sec, max_length_sec)
+    target_samples = int(target_length_sec * sr)
+    
+    current_samples = signal.shape[1]
+    
+    if current_samples > target_samples:
+        # Randomly crop to target length
+        start = random.randint(0, current_samples - target_samples)
+        signal = signal[:, start:start + target_samples]
+    elif current_samples < target_samples:
+        # Pad with zeros
+        padding = torch.zeros(signal.shape[0], target_samples - current_samples)
+        signal = torch.cat([signal, padding], dim=1)
+    
+    return signal
+
+def validate_audio(file_path, expected_sr=16000, min_length_sec=2.0, max_length_sec=5.0):
+    try:
+        signal, sr = torchaudio.load(file_path)
+        if sr != expected_sr:
+            signal = torchaudio.transforms.Resample(sr, expected_sr)(signal)
+        if signal.shape[0] > 1:
+            signal = signal[:1, :]  # Convert to mono
+        # signal = preprocess_audio(signal, expected_sr, min_length_sec, max_length_sec)
+        return signal, expected_sr
+    except Exception as e:
+        print(f"Error loading {file_path}: {e}")
+        return None, None
+    
+def get_embedding(file_path):
+    # waveform, sr = torchaudio.load(file_path)
+    # if waveform.shape[0] > 1:
+    #     waveform = waveform[:1]
+    # waveform = augment(waveform, sr)
+    # waveform = normalize_loudness(waveform)
+    # if sr != 16000:
+    #     waveform = torchaudio.functional.resample(waveform, sr, 16000)
+    waveform, sr = validate_audio(file_path)
+    waveform = normalize_loudness(waveform)
+    waveform = waveform.to(device)
+    emb = spkrec({"waveform": waveform, "sample_rate": 16000})  # shape: (512,)
+    emb = torch.tensor(emb, dtype=torch.float32, device=device)
+    return emb.detach()
+
+# --- Load triplet samples ---
+anchors = list_wavs(ANCHOR_DIR)
+positives = list_wavs(POS_DIR)
+negatives = list_wavs(NEG_DIR)
+
+import torch.nn.functional as F
+def cosine_triplet_loss(anchor, positive, negative, margin=0.5):
+    # Want cosine(anchor, positive) to be ~1
+    # and cosine(anchor, negative) to be << 1
+    pos_sim = F.cosine_similarity(anchor, positive)
+    neg_sim = F.cosine_similarity(anchor, negative)
+    losses = torch.clamp(margin + neg_sim - pos_sim, min=0.0)
+    return pos_sim.item(), neg_sim.item(), losses.mean()
+
+# --- Training Loop ---
+for epoch in range(EPOCHS):
+    total_loss = 0
+    pos_sims = []
+    neg_sims = []
+    triplet_model.train()
+
+    for _ in range(TRIPLETS_PER_EPOCH):
+        a = get_embedding(random.choice(anchors))
+        p = get_embedding(random.choice(positives))
+        n = get_embedding(random.choice(negatives))
+
+        a, p, n = triplet_model(a.unsqueeze(0)), triplet_model(p.unsqueeze(0)), triplet_model(n.unsqueeze(0))
+        pos_sim, neg_sim, loss = cosine_triplet_loss(a, p, n)
+        pos_sims.append(pos_sim)
+        neg_sims.append(neg_sim)
+        loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+        total_loss += loss.item()
+
+    avg_pos = sum(pos_sims) / len(pos_sims)
+    avg_neg = sum(neg_sims) / len(neg_sims)
+    print(f"[Epoch {epoch+1}/{EPOCHS}] Loss: {total_loss:.4f} | Cos(pos): {avg_pos:.4f} | Cos(neg): {avg_neg:.4f}")
+
+# --- Save model ---
+torch.save({
+    "model_state": triplet_model.state_dict(),
+    "input_dim": EMBEDDING_DIM
+}, "tripletnet_dishu.pt")

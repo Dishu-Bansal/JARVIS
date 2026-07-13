@@ -1,0 +1,34 @@
+2025-06-17 04:55:00.551+0000 INFO  Logging config in use: File 'D:\SPECIAL\Jarvis\Memory\neo4j-community-2025.05.0\conf\user-logs.xml'
+2025-06-17 04:55:00.567+0000 INFO  Starting...
+2025-06-17 04:55:02.068+0000 INFO  This instance is ServerId{17d39a05} (17d39a05-0a2f-4c55-9a67-f52f8af7ff25)
+2025-06-17 04:55:05.481+0000 INFO  ======== Neo4j 2025.05.0 ========
+2025-06-17 04:55:09.075+0000 INFO  Anonymous Usage Data is being sent to Neo4j, see https://neo4j.com/docs/usage-data/
+2025-06-17 04:55:10.125+0000 INFO  Bolt enabled on localhost:7687.
+2025-06-17 04:55:11.618+0000 INFO  HTTP enabled on localhost:7474.
+2025-06-17 04:55:11.618+0000 INFO  Remote interface available at http://localhost:7474/
+2025-06-17 04:55:11.618+0000 INFO  id: CC51894754794DC0EF3FA6CE22D186A2356A900479E23571F087DD51B6749D9B
+2025-06-17 04:55:11.618+0000 INFO  name: system
+2025-06-17 04:55:11.618+0000 INFO  creationDate: 2025-06-17T04:55:07.867Z
+2025-06-17 04:55:11.618+0000 INFO  Started.
+2025-06-17 04:55:23.409+0000 INFO  Neo4j Server shutdown initiated by request
+2025-06-17 04:55:23.409+0000 INFO  Stopping...
+2025-06-17 04:55:34.059+0000 INFO  Stopped.
+2025-06-17 04:58:31.267+0000 INFO  Logging config in use: File 'D:\SPECIAL\Jarvis\Memory\neo4j-community-2025.05.0\conf\user-logs.xml'
+2025-06-17 04:58:31.282+0000 INFO  Starting...
+2025-06-17 04:58:32.036+0000 INFO  This instance is ServerId{17d39a05} (17d39a05-0a2f-4c55-9a67-f52f8af7ff25)
+2025-06-17 04:58:33.075+0000 INFO  ======== Neo4j 2025.05.0 ========
+2025-06-17 04:58:34.929+0000 INFO  Anonymous Usage Data is being sent to Neo4j, see https://neo4j.com/docs/usage-data/
+2025-06-17 04:58:35.304+0000 INFO  Bolt enabled on localhost:7687.
+2025-06-17 04:58:35.971+0000 INFO  HTTP enabled on localhost:7474.
+2025-06-17 04:58:35.971+0000 INFO  Remote interface available at http://localhost:7474/
+2025-06-17 04:58:35.971+0000 INFO  id: CC51894754794DC0EF3FA6CE22D186A2356A900479E23571F087DD51B6749D9B
+2025-06-17 04:58:35.971+0000 INFO  name: system
+2025-06-17 04:58:35.971+0000 INFO  creationDate: 2025-06-17T04:55:07.867Z
+2025-06-17 04:58:35.971+0000 INFO  Started.
+2025-06-17 04:58:57.697+0000 WARN  [bolt-0] The client is unauthorized due to authentication failure.
+2025-06-17 04:59:49.154+0000 ERROR Increase in network aborts detected (more than 2 network related connection aborts over a period of 600000 ms) - This may indicate an issue with the network environment or an overload condition
+2025-06-17 05:00:04.485+0000 WARN  [bolt-24] The client is unauthorized due to authentication failure.
+2025-06-17 05:00:56.045+0000 WARN  [bolt-41] The client is unauthorized due to authentication failure.
+2025-06-17 05:02:34.144+0000 WARN  [bolt-56] The client is unauthorized due to authentication failure.
+2025-06-17 08:39:03.967+0000 INFO  Neo4j Server shutdown initiated by request
+2025-06-17 08:39:04.945+0000 INFO  Stopping...
